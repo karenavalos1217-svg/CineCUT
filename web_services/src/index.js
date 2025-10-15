@@ -6,52 +6,57 @@ const fs = require('fs');
 const path = require('path');
 
 const sequelize = require('./config/db');
-const routes = require('./routes');
+const routes = require('./routes');                 // { unprotectedroutes, usuariosRoutes }
 
-// Si necesitas el modelo Recorrido en este archivo:
-const Recorrido = require('./models/usermodels.js'); //  antes apuntaba a userModels.js
+// (opcional) solo si realmente lo necesitas aquí
+const Recorrido = require('./models/usermodels.js');
 
-const app = express();
+// Routers nuevos
+const peliculasRoutes = require('./routes/api/peliculas');
+const salasRoutes     = require('./routes/api/salas');
+
+const app  = express();
+const BASE = process.env.BASE_URL || '/api';
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+// Morgan: token personalizado para UA
 morgan.token('ua', req => req.get('User-Agent'));
 app.use(morgan(':method :url :status :response-time ms - :ua'));
 
-
+// Logs a archivos
 const logsDir = path.join(__dirname, '../Logs');
 if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
 
 const accessLogStream = fs.createWriteStream(path.join(logsDir, 'access.log'), { flags: 'a' });
-// (Opcional) Archivo separado para errores HTTP (4xx/5xx)
 const errorLogStream  = fs.createWriteStream(path.join(logsDir, 'error.log'),  { flags: 'a' });
 
-// 1) Log en consola: 'dev' en desarrollo, 'combined' en producción
+// Consola: dev en desarrollo, combined en prod
 if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'));          // conciso y con colores
+  app.use(morgan('dev'));
 } else {
-  app.use(morgan('combined'));     // formato estándar de servidores
+  app.use(morgan('combined'));
 }
 
-// 2) Log a archivo (siempre): formato completo
+// Archivo: access y solo errores
 app.use(morgan('combined', { stream: accessLogStream }));
-
-// 3) (Opcional) Solo errores a error.log (≥ 400)
 app.use(morgan('combined', {
   stream: errorLogStream,
   skip: (_req, res) => res.statusCode < 400
 }));
 
-// monta rutas
-app.use(routes.unprotectedroutes);
-app.use('/api', routes.usuariosRoutes);
+// ===== Montaje de rutas (usar SIEMPRE BASE) =====
+app.use(routes.unprotectedroutes);      // este router interno puede montar /api por su cuenta
+app.use(BASE, routes.usuariosRoutes);   // /api/usuarios (o lo que tengas dentro)
+app.use(BASE, peliculasRoutes);         // /api/peliculas
+app.use(BASE, salasRoutes);             // /api/salas
+// ===============================================
 
 async function startServer() {
   try {
     await sequelize.sync();
     console.log('DB is ready');
-
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);
     });
