@@ -94,4 +94,48 @@ async function updateProfile(id, data) {
   return sanitize(user);
 }
 
-module.exports = { register, login, getById, updateProfile };
+async function generarTokenRecuperacion(email) {
+  const normEmail = String(email || '').trim().toLowerCase();
+  const user = await Usuario.findOne({ where: { email: normEmail } });
+  if (!user) {
+    const e = new Error('Correo no encontrado');
+    e.status = 404;
+    throw e;
+  }
+
+  // Token corto y de un solo uso “lógico” (si cambias password deja de tener sentido)
+  const token = jwt.sign(
+    { id: user.id, action: 'reset-password' },
+    process.env.JWT_SECRET,
+    { expiresIn: '15m' }
+  );
+
+  // En prod se enviaría por correo. Para práctica, devuélvelo.
+  return token;
+}
+
+async function resetPassword(token, nuevaContrasena) {
+  try {
+    const decoded = jwt.verify(String(token || ''), process.env.JWT_SECRET);
+    if (decoded.action !== 'reset-password') throw new Error('bad action');
+
+    const user = await Usuario.findByPk(decoded.id);
+    if (!user) {
+      const e = new Error('Usuario no encontrado');
+      e.status = 404;
+      throw e;
+    }
+
+    // IMPORTANTE: no hashees aquí. Deja que el hook beforeUpdate haga el hash.
+    user.password = String(nuevaContrasena || '');
+    await user.save();
+
+    return { ok: true };
+  } catch (_err) {
+    const e = new Error('Token inválido o expirado');
+    e.status = 400;
+    throw e;
+  }
+}
+
+module.exports = { register, login, getById, updateProfile, generarTokenRecuperacion, resetPassword, };

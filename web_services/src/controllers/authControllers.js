@@ -40,6 +40,32 @@ class AuthControllers {
       return res.status(code).json({ error: error.message || 'Error actualizando perfil' });
     }
   }
+    async forgotPassword(req, res) {
+    try {
+      const { email } = req.body || {};
+      if (!email) return res.status(400).json({ error: 'Email requerido' });
+
+      const token = await userServices.generarTokenRecuperacion(email);
+      // Para práctica, devuélvelo. En prod lo enviarías por correo.
+      return res.json({ message: 'Token de recuperación generado', token });
+    } catch (error) {
+      return res.status(error.status || 500).json({ error: error.message });
+    }
+  }
+
+  async resetPassword(req, res) {
+    try {
+      const { token, password } = req.body || {};
+      if (!token || !password) {
+        return res.status(400).json({ error: 'token y password son requeridos' });
+      }
+
+      await userServices.resetPassword(token, password);
+      return res.json({ message: 'Contraseña restablecida con éxito' });
+    } catch (error) {
+      return res.status(error.status || 500).json({ error: error.message });
+    }
+  }
 }
 
 module.exports = new AuthControllers();
