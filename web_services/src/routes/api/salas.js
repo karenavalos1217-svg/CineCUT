@@ -93,9 +93,9 @@
 const express = require('express');
 const router = express.Router();
 
-const { auth } = require('../../middleware/auth');
-const { requireAdmin } = require('../../middleware/roles');
-const ctrl = require('../../controllers/salaControllers');
+const { auth } = require('../../middlewares/auth.middleware');
+const { requireAdmin } = require('../../middlewares/rol.middleware');
+const ctrl = require('../../controllers/sala.controller');
 
 // Público (si prefieres, puedes proteger también estos dos)
 router.get('/salas', ctrl.list);
