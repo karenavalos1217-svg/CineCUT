@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const {auth} = require('../../middleware/auth');
-const { requireAdmin} = require('../../middleware/roles');
-const ctrl = require('../../controllers/funcionControllers');
+const {auth} = require('../../middlewares/auth.middleware');
+const { requireAdmin} = require('../../middlewares/rol.middleware');
+const ctrl = require('../../controllers/funcion.controller');
 
 //publicas (Cartelera y detalles)
 router.get('/funciones', ctrl.list);

@@ -63,8 +63,8 @@
 const express = require('express');
 const router = express.Router();
 
-const authCtrl = require('../../controllers/authControllers');
-const { auth } = require('../../middleware/auth'); // agrega req.user
+const authCtrl = require('../../controllers/auth.controller');
+const { auth } = require('../../middlewares/auth.middleware'); // agrega req.user
 
 // Registro / Login 
 router.post('/register', authCtrl.register);

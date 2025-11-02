@@ -112,9 +112,9 @@
 const express = require('express');
 const router = express.Router();
 
-const { auth } = require('../../middleware/auth');
-const { requireAdmin } = require('../../middleware/roles');
-const ctrl = require('../../controllers/peliculaControllers');
+const { auth } = require('../../middlewares/auth.middleware');
+const { requireAdmin } = require('../../middlewares/rol.middleware');
+const ctrl = require('../../controllers/pelicula.controller');
 
 // Público
 router.get('/peliculas', ctrl.list);
